@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+    crossorigin="anonymous"
+    />
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <nav class="navbar bg-blue">
+            <div class="container-fluid">
+              <a class="btn btn-warning" href="/articles">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAeFBMVEX//Tj//zr//zn//jg1NAw/Pg7w7zUcGwZ/fhwkJAg4OAxbWhTg3jGgoCObmiK1tChKSRDr6TRgXxVWVRPZ2DCqqSZOThHz8TXIxyywrifNzC1wbxkeHgbj4jJqaRdFRA++vSotLArBwCsPDwOUkyGIiB4XFwWAfxwUzHwdAAAA2UlEQVR4Ae2QhQHDIBAA+SfWFKJY3JP9J6x7GSGHw2FPPtkBwHdGxGuHfq47rue7XnDwQtc7Mh75seN4HwYkKc8Yz4W8ZMV4ok1R4tcJlalzdhdyxhUAN19C2EDe4kNouEJPfgsOYNfHbmuGtjxWvapiOX4KyBAZabQAwYCUoEtINSWfxiXTSyKIhN4zJX/gDXoRiRVsmlQIj+hSo3Xd68J46gMztoNdEK1GBWoeTaWtl0Bfo6JLVfotWE9gIrrEcljHPrEKlIQdZLyR87ilaDUAKOAV+FvfOQO/Jw2Tt0e3qQAAAABJRU5ErkJggg==" alt="PD">
+                Blog
+              </a>
+            </div>
+        </nav>
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link" href="/articles">Articles</a>
+                    {% if current_user.is_authenticated %}
+                    <a class="nav-item nav-link" href="/logout">Logout</a>
+                    {% else %}
+                    <a class="nav-item nav-link" href="/login">Login</a>
+                    <a class="nav-item nav-link" href="/sign-up">Sign Up</a>
+                    {% endif %}
+                    <a class="nav-item nav-link" href="/contact">Contact</a>
+                    <a class="nav-item nav-link" href="/about">About</a>
+                </div>
+            </div>
+        </div>
+
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        {% if category == "error" %}
+        <div class="alert alert-danger alter-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% else %}
+        <div class="alert alert-success alter-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div class="container">{% block content %}{% endblock %}</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+    crossorigin="anonymous"
+    ></script>
+    <br>
+    <footer>
+        <p class="footer" align="center">
+            &copy; Ruslan <script>
+                document.write(new Date().getFullYear())
+            </script>
+        </p>
+    </footer>
+</body>
+</html>
