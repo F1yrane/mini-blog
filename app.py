@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user,\
+    login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 
@@ -17,7 +18,7 @@ login_manager = LoginManager(app)
 
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), primary_key=True)
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
     username = db.Column(db.String(255), nullable=False, unique=True)
@@ -31,10 +32,12 @@ class User(db.Model, UserMixin):
 
 
 class Article(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    post_id = db.Column(db.Integer(), primary_key=True)
     text = db.Column(db.Text(), nullable=False)
+    author = db.Column(db.Integer(),
+                       db.ForeignKey('user.id', ondelete='CASCADE'),
+                       nullable=False)
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
-    author = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
 
 
 class Message(db.Model):
@@ -48,8 +51,8 @@ class Message(db.Model):
 
 
 @login_manager.user_loader
-def user_loader(id):
-    return User.query.get(int(id))
+def user_loader(user_id):
+    return User.query.get(int(user_id))
 
 
 @app.route("/")
@@ -72,6 +75,7 @@ def create_post():
             db.session.commit()
             flash('Article created successfully', category='success')
             return redirect(url_for('home'))
+
     return render_template('create_posts.html', user=current_user)
 
 
@@ -81,6 +85,7 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password1")
         user = User.query.filter_by(email=email).first()
+
         if user:
             if check_password_hash(user.password, password):
                 flash("Logged in!", category='success')
@@ -90,6 +95,7 @@ def login():
                 flash('Password is incorrect.', category='error')
         else:
             flash('Email does not exist.', category='error')
+
     return render_template("login.html", user=current_user)
 
 
@@ -101,7 +107,7 @@ def sign_up():
         last_name = request.form.get('last_name')
         email = request.form.get("email")
         password1 = request.form.get("password1")
-        password2 = request.form.get("passsword2")
+        password2 = request.form.get("password2")
 
         user = User.query.filter_by(username=username).first()
         if user:
@@ -114,13 +120,13 @@ def sign_up():
             return redirect(url_for('sign_up'))
 
         password = generate_password_hash(password1)
-        new_user = User(username=username, first_name=first_name, last_name=last_name, email=email, password=password)
+        new_user = User(username=username, first_name=first_name,
+                        last_name=last_name, email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user, remember=True)
         flash('User created')
         return redirect(url_for('home'))
-
     return render_template('signup.html', user=current_user)
 
 
@@ -133,18 +139,17 @@ def logout():
 
 @app.route("/delete-post/<id>", methods=['GET'])
 @login_required
-def delete_post(id):
-    article = Article.query.filter_by(id=id).first()
-
+def delete_post(post_id):
+    article = Article.query.filter_by(post_id=post_id).first()
     if not article:
         flash("Post does not exist.", category='error')
     elif current_user.id != article.author:
-        flash('You do not have permission to delete this post.', category='error')
+        flash('You do not have permission to delete this post.',
+              category='error')
     else:
         db.session.delete(article)
         db.session.commit()
         flash('Article deleted.', category='success')
-
     return redirect(url_for('home'))
 
 
@@ -158,7 +163,8 @@ def posts(username):
         return redirect(url_for('home'))
 
     articles = Article.query.filter_by(author=user.id).all()
-    return render_template("posts.html", user=current_user, articles=articles, username=username)
+    return render_template("posts.html", user=current_user,
+                           articles=articles, username=username)
 
 
 @app.route('/about')
@@ -172,20 +178,19 @@ def contact():
         email = request.form.get('email')
         subject = request.form.get('subject')
         message = request.form.get('message')
-
         new_message = Message(email=email, subject=subject, message=message)
         db.session.add(new_message)
         db.session.commit()
-
         flash("Message sent.")
         return redirect(url_for('home'))
+
     return render_template('contact.html')
 
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit(id):
-    article_edit = Article.query.get_or_404(id)
+def edit(post_id):
+    article_edit = Article.query.get_or_404(post_id)
     if request.method == 'POST':
         article_edit.text = request.form.get('text')
         db.session.commit()
